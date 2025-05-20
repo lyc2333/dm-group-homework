@@ -1,0 +1,229 @@
+<head>
+    <meta charset="UTF-8">
+    <title>Steam 游戏销量预测</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1b2838;
+            color: #c7d5e0;
+            font-family: "Segoe UI", sans-serif;
+        }
+
+        .container {
+            max-width: 900px;
+            margin-top: 40px;
+            background-color: #2a475e;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px #000;
+        }
+
+        h2 {
+            color: #66c0f4;
+        }
+
+        .card {
+            background-color: #1b2838;
+            border: 1px solid #66c0f4;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background-color: #171a21;
+            color: #66c0f4;
+            font-weight: bold;
+        }
+
+        .form-control,
+        .form-select,
+        textarea {
+            background-color: #2a475e;
+            color: #ffffff;
+            border: 1px solid #66c0f4;
+        }
+
+        .form-control::placeholder {
+            color: #9aa7b8;
+        }
+
+        button.btn-primary {
+            background-color: #66c0f4;
+            border: none;
+        }
+
+        button.btn-success {
+            background-color: #5cb85c;
+            border: none;
+        }
+
+        button.btn-warning {
+            background-color: #f0ad4e;
+            border: none;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 15px;
+            border-radius: 4px;
+            border: 1px solid #c7d5e0;
+        }
+
+        .result-box {
+            background-color: #2a475e;
+            color: #c7d5e0;
+            border: 1px solid #66c0f4;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .form-control:focus,
+        .form-select:focus,
+        textarea:focus {
+            background-color: #1b2838;
+            /* 深色背景 */
+            color: #c7d5e0;
+            /* 字体颜色 */
+            border-color: #66c0f4;
+            /* Steam 蓝边框 */
+            box-shadow: 0 0 0 0.2rem rgba(102, 192, 244, 0.25);
+            /* 柔和蓝色外阴影 */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="mb-4 text-center">🎮 Steam 游戏销量预测系统</h2>
+
+        <!-- 功能 1: 通过 Steam ID 预测 -->
+        <div class="card mb-4">
+            <div class="card-header">功能一：通过 Steam AppID 获取并预测</div>
+            <div class="card-body">
+                <input type="text" id="steamId" class="form-control mb-2" placeholder="请输入 Steam AppID">
+                <select id="modelSelect1" class="form-select mb-2">
+                    <option value="LogisticRegression">Logistic Regression</option>
+                    <!-- <option value="SGD">SGD</option> -->
+                    <option value="RandomForest">Random Forest</option>
+                    <option value="MLP">MLP</option>
+                    <option value="LogisticRegression (No User Data)">Logistic Regression (No User Data)</option>
+                    <!-- <option value="SGD (No User Data)">SGD (No User Data)</option> -->
+                    <option value="RandomForest (No User Data)">Random Forest (No User Data)</option>
+                    <option value="MLP (No User Data)">MLP (No User Data)</option>
+                    <option value="DetailSalesPredictor">DetailSalesPredictor</option>
+                    <option value="RandomForest (Updated)">Random Forest (Updated)</option>
+                    <option value="MLP (Updated)">MLP (Updated)</option>
+                </select>
+                <button class="btn btn-primary" onclick="predictById()">预测</button>
+                <div id="result1" class="result-box mt-3"></div>
+            </div>
+        </div>
+
+        <!-- 功能 2: 手动输入特征 -->
+        <div class="card mb-4">
+            <div class="card-header">功能二：手动输入特征</div>
+            <div class="card-body">
+                <textarea id="featureInput" class="form-control mb-2" placeholder='请输入 JSON 格式特征，如：{"price": 9.99, "positive": 500, ...}' rows="5"></textarea>
+                <select id="modelSelect2" class="form-select mb-2">
+                    <option value="LogisticRegression">Logistic Regression</option>
+                    <!-- <option value="SGD">SGD</option> -->
+                    <option value="RandomForest">Random Forest</option>
+                    <option value="MLP">MLP</option>
+                    <option value="LogisticRegression (No User Data)">Logistic Regression (No User Data)</option>
+                    <!-- <option value="SGD (No User Data)">SGD (No User Data)</option> -->
+                    <option value="RandomForest (No User Data)">Random Forest (No User Data)</option>
+                    <option value="MLP (No User Data)">MLP (No User Data)</option>
+                    <option value="DetailSalesPredictor">DetailSalesPredictor</option>
+                    <option value="RandomForest (Updated)">Random Forest (Updated)</option>
+                    <option value="MLP (Updated)">MLP (Updated)</option>
+                </select>
+                <button class="btn btn-success" onclick="predictByFeatures()">预测</button>
+                <div id="result2" class="result-box mt-3"></div>
+            </div>
+        </div>
+
+        <!-- 功能 3: 增量训练上传 -->
+        <div class="card">
+            <div class="card-header">功能三：上传新数据增量训练模型</div>
+            <div class="card-body">
+                <input type="file" id="fileInput" class="form-control mb-2">
+                <select id="modelSelect3" class="form-select mb-2">
+                    <option value="MLP">MLP（增量更新）</option>
+                    <option value="RandomForest">Random Forest（全量更新）</option>
+                </select>
+                <button class="btn btn-warning" onclick="uploadData()">上传并训练</button>
+                <div id="result3" class="result-box mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function predictById() {
+            const id = document.getElementById("steamId").value;
+            const model = document.getElementById("modelSelect1").value;
+            const res = await fetch(`/predict_by_id?id=${id}&model=${model}`);
+            const data = await res.json();
+
+            let html = '';
+            if (data.image_base64) {
+                html += `<img src="data:image/jpeg;base64,${data.image_base64}" alt="封面图">`;
+            }
+            html += `<p><strong>预测结果：</strong> ${data.prediction}</p>`;
+            document.getElementById("result1").innerHTML = html;
+        }
+
+        async function predictByFeatures() {
+            const featuresText = document.getElementById("featureInput").value;
+            const model = document.getElementById("modelSelect2").value;
+            let features;
+            try {
+                features = JSON.parse(featuresText);
+            } catch (e) {
+                alert("JSON 格式错误！");
+                return;
+            }
+
+            const res = await fetch('/predict_by_features', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ model, features })
+            });
+
+            const data = await res.json();
+            let html = `<img src="/static/default.png" alt="默认图">`;
+            html += `<p><strong>预测结果：</strong> ${data.prediction}</p>`;
+            document.getElementById("result2").innerHTML = html;
+        }
+
+        async function uploadData() {
+            const fileInput = document.getElementById("fileInput");
+            const model = document.getElementById("modelSelect3").value;
+
+            if (fileInput.files.length === 0) {
+                alert("请选择要上传的 CSV 文件");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+            formData.append("model", model);
+
+            const res = await fetch('/update_model', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+            let html = `<p>模型已更新</p>`;
+            if(data.accuracy){
+                html += `<p>准确率：${data.accuracy}</p>`;
+            }
+            document.getElementById("result3").innerHTML = html;
+        }
+    </script>
+</body>
+
+</html>
